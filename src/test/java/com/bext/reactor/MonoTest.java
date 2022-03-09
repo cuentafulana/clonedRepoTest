@@ -3,6 +3,7 @@ package com.bext.reactor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 @Slf4j
 public class MonoTest {
@@ -11,6 +12,37 @@ public class MonoTest {
         Mono<String> mono = Mono.just("MonoHasJustThis").log();
         mono.subscribe();
 
-        log.info("Mono: {}", mono);
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(mono)
+                .expectNext("MonoHasJustThis")
+                .verifyComplete();
+
+    }
+
+    @Test
+    public void monoSubscriberConsumerTest() {
+        Mono<String> mono = Mono.just("MonoHasJustThis").log();
+        mono.subscribe( t -> log.info("t: {}", t));
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(mono)
+                .expectNext("MonoHasJustThis")
+                .verifyComplete();
+    }
+
+    @Test
+    public void monoSubscriberConsumerErrorTest() {
+        Mono<String> mono = Mono.just("MonoHasJustThis").log()
+                .map( s -> {throw new RuntimeException("test subscribe with error flow");});
+
+        mono.subscribe( t -> log.info("t: {}", t), t -> log.error("error in the flow"));
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(mono)
+                .expectError( RuntimeException.class)
+                .verify();
     }
 }
