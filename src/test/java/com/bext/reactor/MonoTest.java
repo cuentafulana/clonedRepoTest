@@ -45,4 +45,22 @@ public class MonoTest {
                 .expectError( RuntimeException.class)
                 .verify();
     }
+
+    @Test
+    public void monoSubscriberConsumerErrorConsumerCompleteConsumerTest() {
+        Mono<String> mono = Mono.just("MonoHasJustThis")
+                .log()
+                .map(String::toUpperCase);
+
+        mono.subscribe( t -> log.info("t: {}", t),
+                Throwable::printStackTrace,
+                () -> log.info("Complete!"));
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(mono)
+                .expectNext("MonoHasJustThis".toUpperCase())
+                .verifyComplete();
+    }
+
 }
