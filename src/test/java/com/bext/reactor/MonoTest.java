@@ -73,14 +73,13 @@ public class MonoTest {
         mono.subscribe( t -> log.info("t: {}", t),
                 Throwable::printStackTrace,
                 () -> log.info("Complete!"),
-                Subscription::cancel);
+                subscription -> subscription.request(3));
 
         log.info("--------StepVerifier---------");
-/*
+
         StepVerifier.create(mono)
                 .expectNext("MonoHasJustThis".toUpperCase())
                 .verifyComplete();
-                */
     }
 
 
