@@ -41,7 +41,8 @@ public class FluxTest {
         Flux<Integer> fluxInteger = Flux.fromIterable(List.of(1, 2, 3, 4, 5))
                 .log();
 
-        fluxInteger.subscribe(integer -> log.info("flux integer {}", integer));
+        fluxInteger.subscribe(integer -> log.info("flux integer {}", integer), Throwable::printStackTrace
+        ,() -> log.info("Completed!"));
 
         log.info("--------StepVerifier---------");
 
