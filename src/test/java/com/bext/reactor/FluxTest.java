@@ -42,7 +42,7 @@ public class FluxTest {
                 .log();
 
         fluxInteger.subscribe(integer -> log.info("flux integer {}", integer), Throwable::printStackTrace
-        ,() -> log.info("Completed!"));
+        ,() -> log.info("Completed!"), subscription -> subscription.request(3));
 
         log.info("--------StepVerifier---------");
 
