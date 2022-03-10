@@ -112,4 +112,34 @@ public class MonoTest {
                 .verify();
     }
 
+    @Test
+    public void monoDoOnErrorNopTest() {
+        Mono<Object> monoError = Mono.error(new IllegalArgumentException("Mono Error"))
+                .doOnError(throwable -> log.error("doOnError: {}", throwable.getMessage()))
+                .doOnNext(o -> log.info("This doOnNext is not executed {}: ", o))
+                .log();
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(monoError)
+                .expectError(IllegalArgumentException.class)
+                .verify();
+    }
+
+    @Test
+    public void monoDoOnErrorResumeTest() {
+        Mono<Object> monoError = Mono.error(new IllegalArgumentException("Mono Error"))
+                .doOnError(throwable -> log.error("doOnError: {}", throwable.getMessage()))
+                .onErrorResume(throwable -> {
+                    log.info("in onErrorResume: {}", throwable.getMessage());
+                    return Mono.just("Fixed the flow");
+                })
+                .log();
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(monoError)
+                .expectNext("Fixed the flow")
+                .verifyComplete();
+    }
 }
