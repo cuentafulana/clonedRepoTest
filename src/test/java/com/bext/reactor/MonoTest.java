@@ -142,4 +142,40 @@ public class MonoTest {
                 .expectNext("Fixed the flow")
                 .verifyComplete();
     }
+
+    @Test
+    public void monoDoOnErrorResumeDisableDoOnErrorTest() {
+        Mono<Object> monoError = Mono.error(new IllegalArgumentException("Mono Error"))
+                .onErrorResume(throwable -> {
+                    log.info("in onErrorResume: {}", throwable.getMessage());
+                    return Mono.just("Fixed the flow");
+                })
+                .doOnError(throwable -> log.error("doOnError: {}", throwable.getMessage()))
+                .log();
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(monoError)
+                .expectNext("Fixed the flow")
+                .verifyComplete();
+    }
+
+    @Test
+    public void monoDoOnErrorReturnTest() {
+        Mono<Object> monoError = Mono.error(new IllegalArgumentException("Mono Error"))
+                .onErrorReturn("Returned by OnErrorReturn")
+                .onErrorResume(throwable -> {
+                    log.info("in onErrorResume: {}", throwable.getMessage());
+                    return Mono.just("Fixed the flow");
+                })
+                .doOnError(throwable -> log.error("doOnError: {}", throwable.getMessage()))
+                .log();
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(monoError)
+                .expectNext("Returned by OnErrorReturn")
+                .verifyComplete();
+    }
+
 }
