@@ -2,6 +2,7 @@ package com.bext.reactor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Subscription;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -62,5 +63,25 @@ public class MonoTest {
                 .expectNext("MonoHasJustThis".toUpperCase())
                 .verifyComplete();
     }
+
+    @Test
+    public void monoSubscriberConsumerErrorConsumerCompleteConsumerSubscriptionConsumerTest() {
+        Mono<String> mono = Mono.just("MonoHasJustThis")
+                .log()
+                .map(String::toUpperCase);
+
+        mono.subscribe( t -> log.info("t: {}", t),
+                Throwable::printStackTrace,
+                () -> log.info("Complete!"),
+                Subscription::cancel);
+
+        log.info("--------StepVerifier---------");
+/*
+        StepVerifier.create(mono)
+                .expectNext("MonoHasJustThis".toUpperCase())
+                .verifyComplete();
+                */
+    }
+
 
 }
