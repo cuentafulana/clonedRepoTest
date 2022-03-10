@@ -84,12 +84,13 @@ public class MonoTest {
 
     @Test
     public void monoDoOnMethodsTest() {
-        Mono<String> mono = Mono.just("MonoHasJustThis")
+        Mono<Object> mono = Mono.just("MonoHasJustThis")
                 .log()
                 .map(String::toUpperCase)
                 .doOnSubscribe( subscription -> log.info("doOnSubscribe - {}", subscription))
                 .doOnRequest( value -> log.info("doOnRequestThis - {}", value))
                 .doOnNext( s -> log.info("doOnNext - {}", s))
+                .flatMap(s -> Mono.empty())
                 .doOnNext( s -> log.info("doOnNext - {}", s))
                 .doOnSuccess(s -> log.info("doOnSuccess - {}", s));
 
