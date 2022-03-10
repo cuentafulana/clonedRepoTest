@@ -97,14 +97,19 @@ public class MonoTest {
         mono.subscribe( t -> log.info("t: {}", t),
                 Throwable::printStackTrace,
                 () -> log.info("Complete!"));
+    }
 
-        /*
+    @Test
+    public void monoDoOnErrorTest() {
+        Mono<Object> monoError = Mono.error(new IllegalArgumentException("Mono Error"))
+                .doOnError(throwable -> log.error("doOnError: {}", throwable.getMessage()))
+                .log();
+
         log.info("--------StepVerifier---------");
 
-        StepVerifier.create(mono)
-                .expectNext("MonoHasJustThis".toUpperCase())
-                .verifyComplete();
-         */
+        StepVerifier.create(monoError)
+                .expectError(IllegalArgumentException.class)
+                .verify();
     }
 
 }
