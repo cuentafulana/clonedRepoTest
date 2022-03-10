@@ -82,5 +82,28 @@ public class MonoTest {
                 .verifyComplete();
     }
 
+    @Test
+    public void monoDoOnMethodsTest() {
+        Mono<String> mono = Mono.just("MonoHasJustThis")
+                .log()
+                .map(String::toUpperCase)
+                .doOnSubscribe( subscription -> log.info("doOnSubscribe - {}", subscription))
+                .doOnRequest( value -> log.info("doOnRequestThis - {}", value))
+                .doOnNext( s -> log.info("doOnNext - {}", s))
+                .doOnNext( s -> log.info("doOnNext - {}", s))
+                .doOnSuccess(s -> log.info("doOnSuccess - {}", s));
+
+        mono.subscribe( t -> log.info("t: {}", t),
+                Throwable::printStackTrace,
+                () -> log.info("Complete!"));
+
+        /*
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(mono)
+                .expectNext("MonoHasJustThis".toUpperCase())
+                .verifyComplete();
+         */
+    }
 
 }
