@@ -20,4 +20,17 @@ public class FluxTest {
                 .expectNext("Flow","from","flux",".just()")
                 .verifyComplete();
     }
+
+    @Test
+    public void fluxSubscribeNumbersTest(){
+        Flux<Integer> fluxInteger = Flux.range(1, 5)
+                .log();
+        fluxInteger.subscribe(integer -> log.info("flux integer {}", integer));
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(fluxInteger)
+                .expectNext(1, 2,3 ,4, 5)
+                .verifyComplete();
+    }
 }
