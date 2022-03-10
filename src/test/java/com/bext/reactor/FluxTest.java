@@ -2,6 +2,8 @@ package com.bext.reactor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -42,7 +44,7 @@ public class FluxTest {
                 .log();
 
         fluxInteger.subscribe(integer -> log.info("flux integer {}", integer), Throwable::printStackTrace
-        ,() -> log.info("Completed!"), subscription -> subscription.request(3));
+                , () -> log.info("Completed!"));
 
         log.info("--------StepVerifier---------");
 
@@ -68,9 +70,47 @@ public class FluxTest {
         log.info("--------StepVerifier---------");
 
         StepVerifier.create(fluxInteger)
-                .expectNext(1,2,3)
+                .expectNext(1, 2, 3)
                 .expectError(IndexOutOfBoundsException.class)
                 .verify();
-
     }
+
+    @Test
+    public void fluxSubscriberNumberBackPressureTest() {
+        Flux<Integer> fluxInteger = Flux.range(1, 10)
+                .log();
+
+        fluxInteger.subscribe( new Subscriber<Integer>() {
+            private Subscription subscription;
+            private int count = 0;
+            private int requestCount = 3;
+
+            @Override
+            public void onSubscribe(Subscription s) {
+                this.subscription = s;
+                s.request(requestCount);
+            }
+
+            @Override
+            public void onNext(Integer integer) {
+                count++;
+                if (count % requestCount == 0) {
+                    subscription.request(requestCount);
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {}
+
+            @Override
+            public void onComplete() {}
+        });
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(fluxInteger)
+                .expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+                .verifyComplete();
+    }
+
 }
