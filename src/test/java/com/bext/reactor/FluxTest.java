@@ -6,6 +6,7 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import reactor.core.Disposable;
 import reactor.core.publisher.BaseSubscriber;
+import reactor.core.publisher.ConnectableFlux;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -299,7 +300,22 @@ public class FluxTest {
                 .expectSubscription()
                 .expectNext(1,2,3,4,5,6,7,8,9,10)
                 .verifyComplete();
+    }
 
+    @Test
+    public void connectableFlux_Hot_Test() throws InterruptedException {
+        ConnectableFlux<Integer> publish = Flux.range(1, 10)
+                .log()
+                .delayElements(Duration.ofMillis(100))
+                .publish();
 
+        publish.connect();
+
+        Thread.sleep(200); log.info("Thread sleeping for 200 mS");
+        publish.subscribe(i -> log.info("1.- subscribe element {}", i));
+        Thread.sleep(300); log.info("Thread sleeping for 300 mS");
+        publish.subscribe(i -> log.info("2.- subscribe element {}", i));
+
+        Thread.sleep(600);
     }
 }
