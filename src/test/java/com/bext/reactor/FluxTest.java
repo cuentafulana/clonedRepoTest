@@ -273,6 +273,7 @@ public class FluxTest {
         StepVerifier.withVirtualTime(this::fluxIntervalDuration)
                 .expectSubscription()
                 .thenAwait(Duration.ofDays(1))
+                .expectNoEvent(Duration.ofHours(24))
                 .expectNext(0L)
                 .thenAwait(Duration.ofDays(1))
                 .expectNext(1L)
