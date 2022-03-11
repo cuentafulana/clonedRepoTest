@@ -239,5 +239,33 @@ public class FluxTest {
         Thread.sleep(1000);  // to break the flux.interval
     }
 
+    @Test
+    public void intervalSubscribeCancelProgrammaticallyBaseSubscriberTest() throws InterruptedException {
+        Flux<Long> fluxInterval = Flux.interval(Duration.ofMillis(100))
+                .log()
+                .doOnCancel(() -> log.info("doOnCancel"))                        //called when subscribe.cancel
+                .doOnError(err -> log.error("doOnError {}", err.getMessage()))   //not called by main thread stopped or subscription canceled
+                .doOnTerminate(() -> log.info("doOnTerminate"))                  //not called by main thread stopped or subscription canceled
+                .doAfterTerminate(() -> log.info("doAfterTerminate"))            //not called by main thread stopped or subscription canceled
+                .doFinally(signalType -> log.info("doFinally {}", signalType));  //called when subscribe.cancel
+
+        BaseSubscriber subscriber = new BaseSubscriber() {
+            @Override
+            protected void hookOnSubscribe(Subscription subscription) {
+                request(1);
+                log.info("hookOnSubscribe");
+            }
+
+            @Override
+            protected void hookOnNext(Object value) {
+                request(1);
+                if (value.toString().equals("4") ) cancel();
+            }
+        };
+
+        fluxInterval.subscribe( subscriber);
+
+        Thread.sleep(1000);  // to break the flux.interval
+    }
 
 }
