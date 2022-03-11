@@ -286,4 +286,20 @@ public class FluxTest {
                 .take(10)
                 .log();
     }
+
+    @Test
+    public void fluxRangelimitRateTest(){
+        Flux<Integer> fluxRange = Flux.range(1, 10)
+                .log()
+                .limitRate(3);
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(fluxRange)
+                .expectSubscription()
+                .expectNext(1,2,3,4,5,6,7,8,9,10)
+                .verifyComplete();
+
+
+    }
 }
