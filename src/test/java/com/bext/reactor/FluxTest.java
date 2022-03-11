@@ -8,6 +8,7 @@ import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.List;
 
 @Slf4j
@@ -145,5 +146,20 @@ public class FluxTest {
                 .expectSubscription()
                 .expectNext(1,2,3,4,5,6,7,8,9,10)
                 .verifyComplete();
+    }
+
+    @Test
+    public void intervalTest() throws InterruptedException {
+        Flux<Long> fluxInterval = Flux.interval(Duration.ofMillis(100))
+                .log()
+                .doOnCancel(() -> log.info("doOnCancel"))                        //not called by main thread stopped
+                .doOnError( err -> log.error("doOnError {}", err.getMessage()))  //not called by main thread stopped
+                .doFinally(signalType -> log.info("doFinally {}", signalType))   //not called by main thread stopped
+                .doOnTerminate(() -> log.info("doOnTerminate"))                  //not called by main thread stopped
+                .doAfterTerminate(() -> log.info("doAfterTerminate"));           //not called by main thread stopped
+
+        fluxInterval.subscribe(aLong -> log.info("interval: {}", aLong), Throwable::printStackTrace, () -> log.info("Completed!"));
+
+        Thread.sleep(1000);  // to break the flux.interval
     }
 }
