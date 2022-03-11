@@ -268,4 +268,21 @@ public class FluxTest {
         Thread.sleep(1000);  // to break the flux.interval
     }
 
+    @Test
+    public void intervalWithVirtualTest(){
+        StepVerifier.withVirtualTime(this::fluxIntervalDuration)
+                .expectSubscription()
+                .thenAwait(Duration.ofDays(1))
+                .expectNext(0L)
+                .thenAwait(Duration.ofDays(1))
+                .expectNext(1L)
+                .thenCancel()
+                .verify();
+    }
+
+    private Flux<Long> fluxIntervalDuration() {
+        return Flux.interval(Duration.ofDays(1))
+                .take(10)
+                .log();
+    }
 }
