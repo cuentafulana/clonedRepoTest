@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.core.Disposable;
 import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
@@ -162,4 +163,22 @@ public class FluxTest {
 
         Thread.sleep(1000);  // to break the flux.interval
     }
+
+    @Test
+    public void intervalDisposedTest() throws InterruptedException {
+        Flux<Long> fluxInterval = Flux.interval(Duration.ofMillis(100))
+                .log()
+                .doOnCancel(() -> log.info("doOnCancel"))                        //called when subscribe.dispose
+                .doOnError( err -> log.error("doOnError {}", err.getMessage()))  //not called by main thread stopped or subscription disposed
+                .doFinally(signalType -> log.info("doFinally {}", signalType))   //called when subscribe.dispose
+                .doOnTerminate(() -> log.info("doOnTerminate"))                  //not called by main thread stopped or subscription disposed
+                .doAfterTerminate(() -> log.info("doAfterTerminate"));           //not called by main thread stopped or subscription disposed
+
+        Disposable subscribe = fluxInterval.subscribe(aLong -> log.info("interval: {}", aLong), Throwable::printStackTrace, () -> log.info("Completed!"));
+        Thread.sleep(300);
+        subscribe.dispose();
+
+        Thread.sleep(1000);  // to break the flux.interval
+    }
+
 }
