@@ -309,13 +309,20 @@ public class FluxTest {
                 .delayElements(Duration.ofMillis(100))
                 .publish();
 
-        publish.connect();
-
+/*        publish.connect();
         Thread.sleep(200); log.info("Thread sleeping for 200 mS");
         publish.subscribe(i -> log.info("1.- subscribe element {}", i));
         Thread.sleep(300); log.info("Thread sleeping for 300 mS");
         publish.subscribe(i -> log.info("2.- subscribe element {}", i));
+*/
+        log.info("--------StepVerifier---------");
 
-        Thread.sleep(600);
+        StepVerifier.create(publish)
+                .then(publish::connect)
+                .thenConsumeWhile( i -> i < 5)
+                .expectNext(5,6,7,8,9,10)
+                .verifyComplete();
+
+        //Thread.sleep(600);
     }
 }
