@@ -181,4 +181,38 @@ public class FluxTest {
         Thread.sleep(1000);  // to break the flux.interval
     }
 
+    @Test
+    public void intervalDisposedBySubscriberProgrammaticallyTest() throws InterruptedException {
+        Flux<Long> fluxInterval = Flux.interval(Duration.ofMillis(100))
+                .log()
+                .doOnCancel(() -> log.info("doOnCancel"))                        //called when subscribe.dispose
+                .doOnError(err -> log.error("doOnError {}", err.getMessage()))  //not called by main thread stopped or subscription disposed
+                .doFinally(signalType -> log.info("doFinally {}", signalType))   //called when subscribe.dispose
+                .doOnTerminate(() -> log.info("doOnTerminate"))                  //not called by main thread stopped or subscription disposed
+                .doAfterTerminate(() -> log.info("doAfterTerminate"));           //not called by main thread stopped or subscription disposed
+
+        BaseSubscriber subscriber = new BaseSubscriber() {
+            @Override
+            public void dispose() {
+                super.dispose();
+            }
+
+            @Override
+            protected void hookOnSubscribe(Subscription subscription) {
+                request(1);
+                log.info("hookOnSubscribe");
+            }
+
+            @Override
+            protected void hookOnNext(Object value) {
+                request(1);
+                if (value.toString().equals("4") ) dispose();
+            }
+        };
+
+        fluxInterval.subscribe( subscriber);
+
+        Thread.sleep(1000);  // to break the flux.interval
+    }
+
 }
