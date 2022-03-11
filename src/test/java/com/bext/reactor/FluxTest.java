@@ -215,4 +215,29 @@ public class FluxTest {
         Thread.sleep(1000);  // to break the flux.interval
     }
 
+    @Test
+    public void intervalTerminatedTest() throws InterruptedException {
+        Flux<Long> fluxInterval = Flux.interval(Duration.ofMillis(100))
+                .log()
+                .take(3)
+                .doOnCancel(() -> log.info("doOnCancel"))                        //Not called
+                .doOnError(err -> log.error("doOnError {}", err.getMessage()))   //Not called
+                .doOnTerminate(() -> log.info("doOnTerminate"))                           //called 1st when flux finish
+                .doAfterTerminate(() -> log.info("doAfterTerminate"))                     //called 2nd when flux finish
+                .doFinally(signalType -> log.info("doFinally signal: {}", signalType));   //called 3rd when flux finish
+
+        fluxInterval.subscribe(aLong -> log.info("interval: {}", aLong), Throwable::printStackTrace, () -> log.info("Completed!"));
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(fluxInterval)
+                .expectSubscription()
+                .expectNext(0L,1L,2L)
+                .expectComplete()
+                .verify();
+
+        Thread.sleep(1000);  // to break the flux.interval
+    }
+
+
 }
