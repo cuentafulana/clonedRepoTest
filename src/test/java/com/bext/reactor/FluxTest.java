@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -42,7 +43,7 @@ public class FluxTest {
     public void fluxSubscribeFromIterableTest() {
         Flux<Integer> fluxInteger = Flux.fromIterable(List.of(1, 2, 3, 4, 5))
                 .log();
-
+        Flux.concat();
         fluxInteger.subscribe(integer -> log.info("flux integer {}", integer), Throwable::printStackTrace
                 , () -> log.info("Completed!"));
 
@@ -80,10 +81,10 @@ public class FluxTest {
         Flux<Integer> fluxInteger = Flux.range(1, 10)
                 .log();
 
-        fluxInteger.subscribe( new Subscriber<Integer>() {
+        fluxInteger.subscribe(new Subscriber<Integer>() {
             private Subscription subscription;
             private int count = 0;
-            private int requestCount = 3;
+            private final int requestCount = 3;
 
             @Override
             public void onSubscribe(Subscription s) {
@@ -100,10 +101,12 @@ public class FluxTest {
             }
 
             @Override
-            public void onError(Throwable t) {}
+            public void onError(Throwable t) {
+            }
 
             @Override
-            public void onComplete() {}
+            public void onComplete() {
+            }
         });
 
         log.info("--------StepVerifier---------");
@@ -113,4 +116,34 @@ public class FluxTest {
                 .verifyComplete();
     }
 
+    @Test
+    public void fluxSubscriberNumberBackPressureBaseSubscribeTest() {
+        Flux<Integer> fluxInteger = Flux.range(1, 10)
+                .log();
+
+        fluxInteger.subscribe(new BaseSubscriber<>() {
+            private int count = 0;
+            private final int requestCount = 3;
+
+            @Override
+            protected void hookOnSubscribe(Subscription subscription) {
+                request(3);
+            }
+
+            @Override
+            protected void hookOnNext(Integer value) {
+                count++;
+                if (count % requestCount == 0) {
+                    request(requestCount);
+                }
+            }
+        });
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(fluxInteger)
+                .expectSubscription()
+                .expectNext(1,2,3,4,5,6,7,8,9,10)
+                .verifyComplete();
+    }
 }

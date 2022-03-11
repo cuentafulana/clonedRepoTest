@@ -3,6 +3,7 @@ package com.bext.reactor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscription;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -24,7 +25,7 @@ public class MonoTest {
     @Test
     public void monoSubscriberConsumerTest() {
         Mono<String> mono = Mono.just("MonoHasJustThis").log();
-        mono.subscribe( t -> log.info("t: {}", t));
+        mono.subscribe(t -> log.info("t: {}", t));
 
         log.info("--------StepVerifier---------");
 
@@ -36,14 +37,16 @@ public class MonoTest {
     @Test
     public void monoSubscriberConsumerErrorTest() {
         Mono<String> mono = Mono.just("MonoHasJustThis").log()
-                .map( s -> {throw new RuntimeException("test subscribe with error flow");});
+                .map(s -> {
+                    throw new RuntimeException("test subscribe with error flow");
+                });
 
-        mono.subscribe( t -> log.info("t: {}", t), t -> log.error("error in the flow"));
+        mono.subscribe(t -> log.info("t: {}", t), t -> log.error("error in the flow"));
 
         log.info("--------StepVerifier---------");
 
         StepVerifier.create(mono)
-                .expectError( RuntimeException.class)
+                .expectError(RuntimeException.class)
                 .verify();
     }
 
@@ -53,7 +56,7 @@ public class MonoTest {
                 .log()
                 .map(String::toUpperCase);
 
-        mono.subscribe( t -> log.info("t: {}", t),
+        mono.subscribe(t -> log.info("t: {}", t),
                 Throwable::printStackTrace,
                 () -> log.info("Complete!"));
 
@@ -70,7 +73,7 @@ public class MonoTest {
                 .log()
                 .map(String::toUpperCase);
 
-        mono.subscribe( t -> log.info("t: {}", t),
+        mono.subscribe(t -> log.info("t: {}", t),
                 Throwable::printStackTrace,
                 () -> log.info("Complete!"),
                 subscription -> subscription.request(3));
@@ -87,14 +90,14 @@ public class MonoTest {
         Mono<Object> mono = Mono.just("MonoHasJustThis")
                 .log()
                 .map(String::toUpperCase)
-                .doOnSubscribe( subscription -> log.info("doOnSubscribe - {}", subscription))
-                .doOnRequest( value -> log.info("doOnRequestThis - {}", value))
-                .doOnNext( s -> log.info("doOnNext - {}", s))
+                .doOnSubscribe(subscription -> log.info("doOnSubscribe - {}", subscription))
+                .doOnRequest(value -> log.info("doOnRequestThis - {}", value))
+                .doOnNext(s -> log.info("doOnNext - {}", s))
                 .flatMap(s -> Mono.empty())
-                .doOnNext( s -> log.info("doOnNext - {}", s))
+                .doOnNext(s -> log.info("doOnNext - {}", s))
                 .doOnSuccess(s -> log.info("doOnSuccess - {}", s));
 
-        mono.subscribe( t -> log.info("t: {}", t),
+        mono.subscribe(t -> log.info("t: {}", t),
                 Throwable::printStackTrace,
                 () -> log.info("Complete!"));
     }
