@@ -325,4 +325,21 @@ public class FluxTest {
 
         //Thread.sleep(600);
     }
+
+    @Test
+    public void connectableFluxAutoConnectTest(){
+        Flux<Integer> fluxAutoconnect = Flux.range(1, 5)
+                .log()
+                .delayElements(Duration.ofMillis(100))
+                .publish()
+                .autoConnect(2);
+
+        log.info("--------StepVerifier---------");
+
+        StepVerifier.create(fluxAutoconnect)
+                .then(fluxAutoconnect::subscribe)
+                .expectNext(1,2,3,4,5)
+                .expectComplete()
+                .verify();
+    }
 }
