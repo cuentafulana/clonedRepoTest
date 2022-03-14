@@ -10,6 +10,7 @@ import reactor.test.StepVerifier;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -272,5 +273,52 @@ public class OperatorsTest {
         AtomicLong atomicLong = new AtomicLong();
         defer.subscribe(atomicLong::set);
         Assertions.assertTrue(atomicLong.get() > 0);
+    }
+
+    @Test
+    public void fluxConcatTest() {
+        Flux<String> fluxA = Flux.just("a","b");
+        Flux<String> fluxB = Flux.just("c","d");
+
+        Flux<String> fluxConcat = Flux.concat(fluxA, fluxB).log();
+
+        StepVerifier.create(fluxConcat)
+                .expectSubscription()
+                .expectNext("a","b","c","d")
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void fluxConcatWithTest() {
+        Flux<String> fluxA = Flux.just("a","b");
+        Flux<String> fluxB = Flux.just("c","d");
+
+        Flux<String> fluxConcatWith = fluxA.concatWith(fluxB).log();
+
+        StepVerifier.create(fluxConcatWith)
+                .expectSubscription()
+                .expectNext("a","b","c","d")
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    public void fluxCombineLatestTest() throws InterruptedException {
+
+        Flux<String> fluxA = Flux.just("a","b","c","d").delayElements(Duration.ofMillis(100)).log();
+        Flux<String> fluxB = Flux.just("1","2").delayElements(Duration.ofMillis(190)).log();
+
+        Flux<String> fluxCombineLatest = Flux.combineLatest(fluxA, fluxB, (fa, fb) -> fa.toUpperCase() + fb);
+
+        fluxCombineLatest.subscribe(System.out::println);
+
+        StepVerifier.create(fluxCombineLatest)
+                .expectSubscription()
+                .expectNext("A1","B1","C1","C2","D2")
+                .expectComplete()
+                .verify();
+
+        Thread.sleep(500);
     }
 }
