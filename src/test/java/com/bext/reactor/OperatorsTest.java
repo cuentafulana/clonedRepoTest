@@ -258,12 +258,14 @@ public class OperatorsTest {
     @Test
     public void deferTest() throws InterruptedException {
         Mono<Long> monoTick = Mono.just(System.currentTimeMillis());
-        monoTick.subscribe(tick -> log.info("tick {}", tick));
+        Mono<Long> defer = Mono.defer(() -> Mono.just(System.currentTimeMillis()));
+
+        defer.subscribe(tick -> log.info("tick {}", tick));
         Thread.sleep(100);
-        monoTick.subscribe(tick -> log.info("tick {}", tick));
+        defer.subscribe(tick -> log.info("tick {}", tick));
         Thread.sleep(100);
-        monoTick.subscribe(tick -> log.info("tick {}", tick));
+        defer.subscribe(tick -> log.info("tick {}", tick));
         Thread.sleep(100);
-        monoTick.subscribe(tick -> log.info("tick {}", tick));
+        defer.subscribe(tick -> log.info("tick {}", tick));
     }
 }
