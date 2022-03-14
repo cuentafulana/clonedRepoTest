@@ -451,7 +451,7 @@ public class OperatorsTest {
     }
 
     @Test
-    public void fluxFlatMapTest() {
+    public void fluxFlatMapTest() throws InterruptedException{
         Flux<String> flux = Flux.just("a","b");
         Flux<String> fluxString = flux.map(String::toUpperCase)
                 .flatMap( this::findByName)
@@ -461,12 +461,14 @@ public class OperatorsTest {
 
         StepVerifier.create(fluxString)
                 .expectSubscription()
-                .expectNext("Abel","Andrea","Beto","Bety")
+                .expectNext("Beto","Bety","Abel","Andrea")
                 .verifyComplete();
+
+        Thread.sleep(500);
     }
 
     public Flux<String> findByName(String name){
-        return name.equals("A") ? Flux.just("Abel","Andrea") : Flux.just("Beto","Bety");
+        return name.equals("A") ? Flux.just("Abel","Andrea").delayElements(Duration.ofMillis(100)) : Flux.just("Beto","Bety");
 
     }
 }
