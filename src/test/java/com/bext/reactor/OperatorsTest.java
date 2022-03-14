@@ -311,7 +311,7 @@ public class OperatorsTest {
 
         Flux<String> fluxCombineLatest = Flux.combineLatest(fluxA, fluxB, (fa, fb) -> fa.toUpperCase() + fb);
 
-        fluxCombineLatest.subscribe(System.out::println);
+        fluxCombineLatest.subscribe(log::info);
 
         StepVerifier.create(fluxCombineLatest)
                 .expectSubscription()
@@ -329,7 +329,7 @@ public class OperatorsTest {
 
         Flux<String> fluxMerge = Flux.merge(fluxA, fluxB).log();
 
-        fluxMerge.subscribe(System.out::println);
+        fluxMerge.subscribe(log::info);
 
         StepVerifier.create(fluxMerge)
                 .expectSubscription()
@@ -347,7 +347,7 @@ public class OperatorsTest {
         Flux<String> fluxAMergeWithB = fluxA.mergeWith(fluxB).log();
         Flux<String> fluxBMergeWithA = fluxB.mergeWith(fluxA).log();
 
-        fluxAMergeWithB.subscribe(System.out::println);
+        fluxAMergeWithB.subscribe(log::info);
 
         StepVerifier.create( fluxAMergeWithB)
                 .expectSubscription()
@@ -361,4 +361,83 @@ public class OperatorsTest {
 
         Thread.sleep(600);
     }
+
+    @Test
+    public void fluxMergeSecuentialTest() throws InterruptedException {
+        Flux<String> fluxA = Flux.just("a", "b","c", "d").delayElements(Duration.ofMillis(100));
+        Flux<String> fluxB = Flux.just("1", "2").delayElements(Duration.ofMillis(190));
+
+        Flux<String> fluxMerge = Flux.mergeSequential(fluxA, fluxB).log();
+
+        fluxMerge.subscribe(log::info);
+
+        StepVerifier.create(fluxMerge)
+                .expectSubscription()
+                .expectNext("a","b","c","d","1","2")
+                .verifyComplete();
+
+        Thread.sleep(600);
+    }
+
+    @Test
+    public void fluxConcatWithErrorTest() {
+        Flux<String> fluxA = Flux.just("a", "b")
+                .map( t -> {
+                    if (t.equals("b")){
+                        throw new IllegalArgumentException();
+                    }
+                    return t;
+                });
+        Flux<String> fluxB = Flux.just("c", "d");
+
+        Flux<String> fluxConcat = Flux.concat(fluxA, fluxB).log();
+
+        StepVerifier.create(fluxConcat)
+                .expectSubscription()
+                .expectNext("a")
+                .expectError(IllegalArgumentException.class)
+                .verify();
+    }
+
+    @Test
+    public void fluxConcatDelayErrorTest() {
+        Flux<String> fluxA = Flux.just("a", "b")
+                .map( t -> {
+                    if (t.equals("b")){
+                        throw new IllegalArgumentException();
+                    }
+                    return t;
+                });
+        Flux<String> fluxB = Flux.just("c", "d");
+
+        Flux<String> fluxConcat = Flux.concatDelayError(fluxA, fluxB).log();
+
+        StepVerifier.create(fluxConcat)
+                .expectSubscription()
+                .expectNext("a","c","d")
+                .expectError(IllegalArgumentException.class)
+                .verify();
+    }
+
+    @Test
+    public void fluxMergeDelayErrorTest() {
+        Flux<String> fluxA = Flux.just("a", "b")
+                .map( t -> {
+                    if (t.equals("b")){
+                        throw new IllegalArgumentException();
+                    }
+                    return t;
+                }).doOnError( err -> log.error("fluxA.doOnError reporting error {}", err.getMessage()));
+
+        Flux<String> fluxB = Flux.just("c", "d");
+
+        Flux<String> fluxConcat = Flux.mergeDelayError(1, fluxA, fluxB, fluxA).log();
+
+        StepVerifier.create(fluxConcat)
+                .expectSubscription()
+                .expectNext("a","c","d","a")
+                .expectError()
+                .verify();
+    }
+
 }
