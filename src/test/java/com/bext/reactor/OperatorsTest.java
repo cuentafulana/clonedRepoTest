@@ -1,10 +1,16 @@
 package com.bext.reactor;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 @Slf4j
 public class OperatorsTest {
@@ -24,7 +30,7 @@ public class OperatorsTest {
 
         StepVerifier.create(fluxSubscribeOn)
                 .expectSubscription()
-                .expectNext(1,2,3,4)
+                .expectNext(1, 2, 3, 4)
                 .verifyComplete();
     }
 
@@ -43,7 +49,7 @@ public class OperatorsTest {
 
         StepVerifier.create(fluxSubscribeOn)
                 .expectSubscription()
-                .expectNext(1,2,3,4)
+                .expectNext(1, 2, 3, 4)
                 .verifyComplete();
     }
 
@@ -67,7 +73,7 @@ public class OperatorsTest {
 
         StepVerifier.create(fluxSubscribeOn)
                 .expectSubscription()
-                .expectNext(1,2,3,4,5,6)
+                .expectNext(1, 2, 3, 4, 5, 6)
                 .verifyComplete();
     }
 
@@ -91,7 +97,7 @@ public class OperatorsTest {
 
         StepVerifier.create(fluxSubscribeOn)
                 .expectSubscription()
-                .expectNext(1,2,3,4, 5,6)
+                .expectNext(1, 2, 3, 4, 5, 6)
                 .verifyComplete();
     }
 
@@ -121,7 +127,7 @@ public class OperatorsTest {
 
         StepVerifier.create(fluxSubscribeOn)
                 .expectSubscription()
-                .expectNext(1,2,3,4,5,6, 7,8)
+                .expectNext(1, 2, 3, 4, 5, 6, 7, 8)
                 .verifyComplete();
     }
 
@@ -151,7 +157,7 @@ public class OperatorsTest {
 
         StepVerifier.create(fluxSubscribeOn)
                 .expectSubscription()
-                .expectNext(1,2,3,4,5,6, 7,8)
+                .expectNext(1, 2, 3, 4, 5, 6, 7, 8)
                 .verifyComplete();
     }
 
@@ -181,7 +187,7 @@ public class OperatorsTest {
 
         StepVerifier.create(fluxSubscribeOn)
                 .expectSubscription()
-                .expectNext(1,2,3,4,5,6, 7,8)
+                .expectNext(1, 2, 3, 4, 5, 6, 7, 8)
                 .verifyComplete();
     }
 
@@ -211,7 +217,23 @@ public class OperatorsTest {
 
         StepVerifier.create(fluxSubscribeOn)
                 .expectSubscription()
-                .expectNext(1,2,3,4,5,6, 7,8)
+                .expectNext(1, 2, 3, 4, 5, 6, 7, 8)
+                .verifyComplete();
+    }
+
+    @Test
+    public void subscribeOnIOTest() {
+        Mono<List<String>> listMono = Mono.fromCallable(() -> Files.readAllLines(Path.of("data.txt")))
+                .log()
+                .subscribeOn(Schedulers.boundedElastic());
+
+        StepVerifier.create(listMono)
+                .expectSubscription()
+                .thenConsumeWhile(lines -> {
+                    Assertions.assertFalse(lines.isEmpty());
+                    log.info("lines size: {}", lines.size());
+                    return true;
+                })
                 .verifyComplete();
     }
 
