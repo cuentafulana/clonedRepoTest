@@ -440,4 +440,33 @@ public class OperatorsTest {
                 .verify();
     }
 
+    @Test
+    public void fluxMapTest() {
+        Flux<String> flux = Flux.just("a", "b");
+        Flux<Flux<String>> fluxFluxString = flux.map(String::toUpperCase)
+                .map(this::findByName)
+                .log();
+
+        fluxFluxString.subscribe(o -> o.toStream().forEach(s -> log.info("{}", s)));
+    }
+
+    @Test
+    public void fluxFlatMapTest() {
+        Flux<String> flux = Flux.just("a","b");
+        Flux<String> fluxString = flux.map(String::toUpperCase)
+                .flatMap( this::findByName)
+                .log();
+
+        fluxString.subscribe( o -> log.info("{}", o));
+
+        StepVerifier.create(fluxString)
+                .expectSubscription()
+                .expectNext("Abel","Andrea","Beto","Bety")
+                .verifyComplete();
+    }
+
+    public Flux<String> findByName(String name){
+        return name.equals("A") ? Flux.just("Abel","Andrea") : Flux.just("Beto","Bety");
+
+    }
 }
