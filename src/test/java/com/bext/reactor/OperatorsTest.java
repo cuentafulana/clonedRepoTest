@@ -467,6 +467,23 @@ public class OperatorsTest {
         Thread.sleep(500);
     }
 
+    @Test
+    public void fluxFlatMapSequentialTest() throws InterruptedException{
+        Flux<String> flux = Flux.just("a","b");
+        Flux<String> fluxString = flux.map(String::toUpperCase)
+                .flatMapSequential( this::findByName)
+                .log();
+
+        fluxString.subscribe( o -> log.info("{}", o));
+
+        StepVerifier.create(fluxString)
+                .expectSubscription()
+                .expectNext("Abel","Andrea","Beto","Bety")
+                .verifyComplete();
+
+        Thread.sleep(500);
+    }
+
     public Flux<String> findByName(String name){
         return name.equals("A") ? Flux.just("Abel","Andrea").delayElements(Duration.ofMillis(100)) : Flux.just("Beto","Bety");
 
