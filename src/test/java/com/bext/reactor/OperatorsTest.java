@@ -277,28 +277,28 @@ public class OperatorsTest {
 
     @Test
     public void fluxConcatTest() {
-        Flux<String> fluxA = Flux.just("a","b");
-        Flux<String> fluxB = Flux.just("c","d");
+        Flux<String> fluxA = Flux.just("a", "b");
+        Flux<String> fluxB = Flux.just("c", "d");
 
         Flux<String> fluxConcat = Flux.concat(fluxA, fluxB).log();
 
         StepVerifier.create(fluxConcat)
                 .expectSubscription()
-                .expectNext("a","b","c","d")
+                .expectNext("a", "b", "c", "d")
                 .expectComplete()
                 .verify();
     }
 
     @Test
     public void fluxConcatWithTest() {
-        Flux<String> fluxA = Flux.just("a","b");
-        Flux<String> fluxB = Flux.just("c","d");
+        Flux<String> fluxA = Flux.just("a", "b");
+        Flux<String> fluxB = Flux.just("c", "d");
 
         Flux<String> fluxConcatWith = fluxA.concatWith(fluxB).log();
 
         StepVerifier.create(fluxConcatWith)
                 .expectSubscription()
-                .expectNext("a","b","c","d")
+                .expectNext("a", "b", "c", "d")
                 .expectComplete()
                 .verify();
     }
@@ -306,8 +306,8 @@ public class OperatorsTest {
     @Test
     public void fluxCombineLatestTest() throws InterruptedException {
 
-        Flux<String> fluxA = Flux.just("a","b","c","d").delayElements(Duration.ofMillis(100)).log();
-        Flux<String> fluxB = Flux.just("1","2").delayElements(Duration.ofMillis(190)).log();
+        Flux<String> fluxA = Flux.just("a", "b", "c", "d").delayElements(Duration.ofMillis(100)).log();
+        Flux<String> fluxB = Flux.just("1", "2").delayElements(Duration.ofMillis(190)).log();
 
         Flux<String> fluxCombineLatest = Flux.combineLatest(fluxA, fluxB, (fa, fb) -> fa.toUpperCase() + fb);
 
@@ -315,10 +315,50 @@ public class OperatorsTest {
 
         StepVerifier.create(fluxCombineLatest)
                 .expectSubscription()
-                .expectNext("A1","B1","C1","C2","D2")
+                .expectNext("A1", "B1", "C1", "C2", "D2")
                 .expectComplete()
                 .verify();
 
         Thread.sleep(500);
+    }
+
+    @Test
+    public void fluxMergeTest() throws InterruptedException {
+        Flux<String> fluxA = Flux.just("a", "b","c", "d").delayElements(Duration.ofMillis(100));
+        Flux<String> fluxB = Flux.just("1", "2").delayElements(Duration.ofMillis(190));
+
+        Flux<String> fluxMerge = Flux.merge(fluxA, fluxB).log();
+
+        fluxMerge.subscribe(System.out::println);
+
+        StepVerifier.create(fluxMerge)
+                .expectSubscription()
+                .expectNext("a","1","b","c","2","d")
+                .verifyComplete();
+
+        Thread.sleep(600);
+    }
+
+    @Test
+    public void fluxMergeWithTest() throws InterruptedException {
+        Flux<String> fluxA = Flux.just("a", "b","c", "d").delayElements(Duration.ofMillis(100));
+        Flux<String> fluxB = Flux.just("1", "2").delayElements(Duration.ofMillis(190));
+
+        Flux<String> fluxAMergeWithB = fluxA.mergeWith(fluxB).log();
+        Flux<String> fluxBMergeWithA = fluxB.mergeWith(fluxA).log();
+
+        fluxAMergeWithB.subscribe(System.out::println);
+
+        StepVerifier.create( fluxAMergeWithB)
+                .expectSubscription()
+                .expectNext("a","1","b","c","2","d")
+                .verifyComplete();
+
+        StepVerifier.create( fluxBMergeWithA)
+                .expectSubscription()
+                .expectNext("a","1","b","c","2","d")
+                .verifyComplete();
+
+        Thread.sleep(600);
     }
 }
