@@ -237,4 +237,33 @@ public class OperatorsTest {
                 .verifyComplete();
     }
 
+    @Test
+    public void switchIfEmptyTest() {
+        Flux<Object> flux = fluxEmpty()
+                .switchIfEmpty(Flux.just("It", "was", "empty", "but", "now", "not", "anymore"))
+                .log();
+
+        StepVerifier.create(flux)
+                .expectSubscription()
+                .expectNext("It", "was", "empty", "but", "now", "not", "anymore")
+                .expectComplete()
+                .verify();
+
+    }
+
+    private Flux<Object> fluxEmpty() {
+        return Flux.empty();
+    }
+
+    @Test
+    public void deferTest() throws InterruptedException {
+        Mono<Long> monoTick = Mono.just(System.currentTimeMillis());
+        monoTick.subscribe(tick -> log.info("tick {}", tick));
+        Thread.sleep(100);
+        monoTick.subscribe(tick -> log.info("tick {}", tick));
+        Thread.sleep(100);
+        monoTick.subscribe(tick -> log.info("tick {}", tick));
+        Thread.sleep(100);
+        monoTick.subscribe(tick -> log.info("tick {}", tick));
+    }
 }
