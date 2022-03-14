@@ -1,5 +1,9 @@
 package com.bext.reactor;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -7,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
+import reactor.util.function.Tuple3;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -487,5 +492,49 @@ public class OperatorsTest {
     public Flux<String> findByName(String name){
         return name.equals("A") ? Flux.just("Abel","Andrea").delayElements(Duration.ofMillis(100)) : Flux.just("Beto","Bety");
 
+    }
+
+    @Test
+    public void fluxZipTest(){
+        Flux<String> fluxAnimal = Flux.just("dog", "bird");
+        Flux<String> fluxAction = Flux.just("run", "fly");
+        Flux<Integer> fluxLegs = Flux.just(4, 2);
+
+        Flux<Animal> fluxCharacteristics = Flux.zip(fluxAnimal, fluxAction, fluxLegs)
+                .flatMap(tuple -> Flux.just(new Animal( tuple.getT1(), tuple.getT2(), tuple.getT3())));
+
+        fluxCharacteristics.subscribe( animal -> log.info(animal.toString()));
+
+        StepVerifier.create(fluxCharacteristics)
+                .expectSubscription()
+                .expectNext(new Animal("dog", "run", 4), new Animal("bird","fly",2))
+                .verifyComplete();
+    }
+
+    @Test
+    public void fluxZipWithTest(){
+        Flux<String> fluxAnimal = Flux.just("dog", "bird");
+        Flux<String> fluxAction = Flux.just("run", "fly");
+        Flux<Integer> fluxLegs = Flux.just(4, 2);
+
+        Flux<Animal> fluxCharacteristics = fluxAnimal.zipWith(fluxLegs)
+                .flatMap(tuple -> Flux.just(new Animal( tuple.getT1(), null, tuple.getT2())));
+
+        fluxCharacteristics.subscribe( animal -> log.info(animal.toString()));
+
+        StepVerifier.create(fluxCharacteristics)
+                .expectSubscription()
+                .expectNext(new Animal("dog", null, 4), new Animal("bird",null,2))
+                .verifyComplete();
+    }
+
+    @AllArgsConstructor
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    class Animal{
+        private String name;
+        private String action;
+        private int legs;
     }
 }
