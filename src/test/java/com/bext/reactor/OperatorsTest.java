@@ -94,4 +94,125 @@ public class OperatorsTest {
                 .expectNext(1,2,3,4, 5,6)
                 .verifyComplete();
     }
+
+    @Test
+    public void multiplePublishOnSchedulersTest() {
+        Flux<Integer> fluxSubscribeOn = Flux.range(1, 8)
+                .publishOn(Schedulers.boundedElastic())
+                .map(i -> {
+                    log.info("1st map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .publishOn(Schedulers.single())
+                .map(i -> {
+                    log.info("2nd map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .publishOn(Schedulers.boundedElastic())
+                .map(i -> {
+                    log.info("3th map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .publishOn(Schedulers.single())
+                .map(i -> {
+                    log.info("4th map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                });
+
+        StepVerifier.create(fluxSubscribeOn)
+                .expectSubscription()
+                .expectNext(1,2,3,4,5,6, 7,8)
+                .verifyComplete();
+    }
+
+    @Test
+    public void multipleSubscribeOnSchedulersTest() {
+        Flux<Integer> fluxSubscribeOn = Flux.range(1, 8)
+                .subscribeOn(Schedulers.boundedElastic())
+                .map(i -> {
+                    log.info("1st map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .subscribeOn(Schedulers.single())
+                .map(i -> {
+                    log.info("2nd map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .map(i -> {
+                    log.info("3th map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .subscribeOn(Schedulers.single())
+                .map(i -> {
+                    log.info("4th map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                });
+
+        StepVerifier.create(fluxSubscribeOn)
+                .expectSubscription()
+                .expectNext(1,2,3,4,5,6, 7,8)
+                .verifyComplete();
+    }
+
+    @Test
+    public void multiplePublishOnSubscribeOnSchedulersTest() {
+        Flux<Integer> fluxSubscribeOn = Flux.range(1, 8)
+                .publishOn(Schedulers.boundedElastic())
+                .map(i -> {
+                    log.info("1st map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .subscribeOn(Schedulers.single())
+                .map(i -> {
+                    log.info("2nd map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .map(i -> {
+                    log.info("3th map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .subscribeOn(Schedulers.single())
+                .map(i -> {
+                    log.info("4th map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                });
+
+        StepVerifier.create(fluxSubscribeOn)
+                .expectSubscription()
+                .expectNext(1,2,3,4,5,6, 7,8)
+                .verifyComplete();
+    }
+
+    @Test
+    public void multiplePublishOnSubscribeOnSchedulers2Test() {
+        Flux<Integer> fluxSubscribeOn = Flux.range(1, 8)
+                .publishOn(Schedulers.boundedElastic())
+                .map(i -> {
+                    log.info("1st map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .subscribeOn(Schedulers.single())
+                .map(i -> {
+                    log.info("2nd map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .publishOn(Schedulers.boundedElastic())
+                .map(i -> {
+                    log.info("3th map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                })
+                .subscribeOn(Schedulers.single())
+                .map(i -> {
+                    log.info("4th map - {} - on thread {}", i, Thread.currentThread().getName());
+                    return i;
+                });
+
+        StepVerifier.create(fluxSubscribeOn)
+                .expectSubscription()
+                .expectNext(1,2,3,4,5,6, 7,8)
+                .verifyComplete();
+    }
+
 }
