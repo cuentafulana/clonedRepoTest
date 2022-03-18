@@ -98,7 +98,7 @@ A Walk through Project Reactor with test
 - Flux.zip( fluxA, fluxB,...) fluxA.zipWith( fluxB)
 - BlockHound to test if code has blocking calls
 
-                                                                                             //
+                                                                                        // Class to Test
     @BeforeAll
     public  static void setup(){
         BlockHound.install();
@@ -118,4 +118,4 @@ A Walk through Project Reactor with test
                 })
                 .block();
         });
-    }
+    }                                                                                    // Class to Test
