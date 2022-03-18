@@ -95,3 +95,24 @@ A Walk through Project Reactor with test
 - Flux.flatMap delaying flux
 - Flux.flatMapSequential
 - Flux.zip( fluxA, fluxB,...) fluxA.zipWith( fluxB)
+- BlockHound to test if code has blocking calls
+    @BeforeAll
+    public  static void setup(){
+        BlockHound.install();
+    }
+
+    @Test
+    public void blockhoundinstallTest(){
+        Assertions.assertThrows(RuntimeException.class, () -> {
+        Mono.delay(Duration.ofSeconds(1))
+                .doOnNext(it -> {
+                    try {
+                        Thread.sleep(10);
+                    }
+                    catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .block();
+        });
+    }

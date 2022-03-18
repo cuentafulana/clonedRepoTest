@@ -1,15 +1,65 @@
 package com.bext.reactor;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Subscription;
+import reactor.blockhound.BlockHound;
+import reactor.blockhound.BlockingOperationError;
 import reactor.core.Disposable;
+import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
+
+import java.time.Duration;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public class MonoTest {
+
+    @BeforeAll
+    public  static void setup(){
+        BlockHound.install();
+    }
+
+    @Test
+    public void blockhoundinstallTest(){
+        Assertions.assertThrows(RuntimeException.class, () -> {
+        Mono.delay(Duration.ofSeconds(1))
+                .doOnNext(it -> {
+                    try {
+                        Thread.sleep(10);
+                    }
+                    catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .block();
+        });
+    }
+
+    @Test
+    public void blockhoundtest2() {
+        FutureTask<?> futureTask = new FutureTask<>(() -> {
+            Thread.sleep(0);
+            return "";
+        });
+        Schedulers.parallel().schedule(futureTask);
+        try {
+            futureTask.get( 10, TimeUnit.SECONDS);
+            Assertions.fail("Fail ");
+        } catch (Exception e) {
+            //e.printStackTrace();
+            Assertions.assertTrue(e.getCause() instanceof BlockingOperationError);
+        }
+    }
+
     @Test
     public void monoSubscriberTest() {
         Mono<String> mono = Mono.just("MonoHasJustThis").log();
