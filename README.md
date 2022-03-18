@@ -23,6 +23,7 @@ A Walk through Project Reactor with test
 - backpressure overriding subscription
 - backpressure lambdas alternative BaseSubscriber
 - Flux.interval simple do..XX.. activated when main Thread finish
+
         Flux<Long> fluxInterval = Flux.interval(Duration.ofMillis(100))
                 .log()
                 .doOnCancel(() -> log.info("doOnCancel"))                        //not called by main thread stopped
@@ -96,6 +97,8 @@ A Walk through Project Reactor with test
 - Flux.flatMapSequential
 - Flux.zip( fluxA, fluxB,...) fluxA.zipWith( fluxB)
 - BlockHound to test if code has blocking calls
+
+                                                                                             //
     @BeforeAll
     public  static void setup(){
         BlockHound.install();
